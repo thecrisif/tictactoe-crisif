@@ -234,6 +234,7 @@ body::after{content:'';position:fixed;bottom:0;left:0;right:0;height:45%;backgro
 </div>
 
 <script type="module">
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
@@ -285,6 +286,50 @@ function volverMenu(){
   mostrarPantalla('screen-menu');
 }
 
+// ====== LISTENER UNIFICADO ======
+function setupListener(){
+  onValue(ref(db,`ttt/${roomId}`), snap=>{
+    if(!snap.exists()) return;
+    const data=snap.val();
+
+    // Esperar que el amigo se una
+    if(data.status==='waiting') return;
+
+    // Iniciar juego si no empezó
+    if(!juegoActivo){
+      iniciarJuego(data);
+      return;
+    }
+
+    // Sincronizar tablero y turno desde Firebase siempre
+    if(data.tablero){
+      tablero = Array.isArray(data.tablero) ? data.tablero : Object.values(data.tablero);
+    }
+    turnoActual = data.turno;
+
+    renderTablero();
+
+    // Detectar revancha
+    if(data.ultimoPor==='revancha'){
+      reiniciarRonda();
+      return;
+    }
+
+    // Verificar resultado
+    const res=verificar();
+    if(res){ finRonda(res); return; }
+
+    actualizarCards();
+
+    // Mostrar estado correcto
+    if(turnoActual===miSimbolo){
+      setStatus('¡Tu turno! Eres '+miSimbolo,'x');
+    } else {
+      setStatus('Turno del amigo <span class="thinking-dots"><span></span><span></span><span></span></span>','o');
+    }
+  });
+}
+
 async function irACrear(){
   mostrarPantalla('screen-crear');
   myRole='host'; miSimbolo='X';
@@ -295,21 +340,7 @@ async function irACrear(){
     tablero:Array(9).fill(null), turno:'X', status:'waiting', ultimoPor:null
   });
 
-  onValue(ref(db,`ttt/${roomId}`), snap=>{
-    if(!snap.exists()) return;
-    const data=snap.val();
-    if(data.status==='playing' && !juegoActivo){ iniciarJuego(); return; }
-    if(!juegoActivo) return;
-    if(data.ultimoPor && data.ultimoPor!==miSimbolo){
-      tablero=data.tablero; turnoActual=data.turno;
-      renderTablero();
-      const res=verificar();
-      if(res){ finRonda(res); return; }
-      actualizarCards();
-      setStatus('¡Tu turno!','x');
-    }
-    if(data.ultimoPor==='revancha' && !juegoActivo){ reiniciarRonda(); }
-  });
+  setupListener();
 }
 
 function irAUnirse(){
@@ -341,26 +372,19 @@ async function unirseASala(){
   document.getElementById('texto-conectando').textContent='✅ ¡CONECTADO!';
   await update(ref(db,`ttt/${roomId}`),{ status:'playing' });
 
-  onValue(ref(db,`ttt/${roomId}`), snap=>{
-    if(!snap.exists()) return;
-    const data=snap.val();
-    if(!juegoActivo){ iniciarJuego(); return; }
-    if(data.ultimoPor && data.ultimoPor!==miSimbolo){
-      tablero=data.tablero; turnoActual=data.turno;
-      renderTablero();
-      const res=verificar();
-      if(res){ finRonda(res); return; }
-      actualizarCards();
-      setStatus('¡Tu turno!','x');
-    }
-    if(data.ultimoPor==='revancha' && !juegoActivo){ reiniciarRonda(); }
-  });
+  setupListener();
 }
 
-function iniciarJuego(){
+function iniciarJuego(data){
   if(juegoActivo) return;
   mostrarPantalla('screen-game');
-  tablero=Array(9).fill(null); turnoActual='X'; juegoActivo=true;
+  if(data && data.tablero){
+    tablero = Array.isArray(data.tablero) ? data.tablero : Object.values(data.tablero);
+  } else {
+    tablero = Array(9).fill(null);
+  }
+  turnoActual = (data && data.turno) ? data.turno : 'X';
+  juegoActivo=true;
   document.getElementById('conn-badge').className='conn-badge online';
   document.getElementById('conn-badge').innerHTML='<div class="conn-dot"></div><span>ONLINE</span>';
   if(miSimbolo==='X'){ document.getElementById('nombre-x').textContent='THE CRIS IF'; document.getElementById('nombre-o').textContent='AMIGO'; }
@@ -396,13 +420,14 @@ function renderTablero(){
 
 async function clickCelda(i){
   if(!juegoActivo||turnoActual!==miSimbolo||tablero[i]) return;
-  tablero[i]=miSimbolo; renderTablero();
-  const res=verificar();
+  tablero[i]=miSimbolo; 
   const nuevoTurno=miSimbolo==='X'?'O':'X';
-  await update(ref(db,`ttt/${roomId}`),{ tablero, turno:res?turnoActual:nuevoTurno, ultimoPor:miSimbolo });
-  if(res){ finRonda(res); return; }
-  turnoActual=nuevoTurno; actualizarCards();
-  setStatus('Turno del amigo <span class="thinking-dots"><span></span><span></span><span></span></span>','o');
+  // Guardar en Firebase y dejar que el listener actualice
+  await update(ref(db,`ttt/${roomId}`),{ 
+    tablero, 
+    turno: nuevoTurno, 
+    ultimoPor: miSimbolo 
+  });
 }
 
 function verificar(){
@@ -421,8 +446,8 @@ function finRonda(res){
 }
 
 async function pedirRevancha(){
+  juegoActivo=false;
   await update(ref(db,`ttt/${roomId}`),{ tablero:Array(9).fill(null), turno:'X', ultimoPor:'revancha' });
-  reiniciarRonda();
 }
 
 function dibujarLinea(res){
