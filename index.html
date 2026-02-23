@@ -14,9 +14,9 @@ body{
   color:white;
   display:flex;
   justify-content:center;
-  align-items:center;
-  height:100vh;
-  overflow:hidden;
+  align-items:flex-start; /* CAMBIO AQUÍ */
+  min-height:100vh;
+  padding-top:40px; /* espacio arriba */
 }
 
 /* efecto partículas suaves */
@@ -95,9 +95,39 @@ input{
   gap:8px;
   margin-top:20px;
   padding:12px;
-  border-radius:20px;
-  border:2px solid #00f0ff;
-  box-shadow:0 0 35px #00f0ff88;
+  border-radius:25px;
+  position:relative;
+  background:#070d25;
+  z-index:1;
+}
+
+/* MARCO ARCOIRIS ANIMADO */
+.board::before{
+  content:"";
+  position:absolute;
+  inset:-4px;
+  border-radius:30px;
+  background:linear-gradient(
+    45deg,
+    red,
+    orange,
+    yellow,
+    lime,
+    cyan,
+    blue,
+    violet,
+    red
+  );
+  background-size:400%;
+  animation:rainbowMove 6s linear infinite;
+  z-index:-1;
+  filter:blur(8px);
+}
+
+@keyframes rainbowMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
 }
 
 /* CELDAS */
@@ -147,13 +177,42 @@ input{
 .hidden{
   display:none;
 }
+/* TITULO PRINCIPAL */
+.tituloJuego{
+  margin-bottom:30px;
+}
 
+.tituloJuego h1{
+  font-size:38px;
+  letter-spacing:6px;
+  margin:0;
+  font-weight:bold;
+  background:linear-gradient(
+    90deg,
+    red,
+    orange,
+    yellow,
+    lime,
+    cyan,
+    blue,
+    violet,
+    red
+  );
+  background-size:400%;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:rainbowText 6s linear infinite;
+  text-shadow:0 0 20px rgba(255,255,255,0.3);
+}
 </style>
 </head>
 <body>
 
 <div class="container">
-
+<div class="tituloJuego">
+  <h1>TIC TAC TOE</h1>
+  <h3 class="autor">THE CRIS IF</h3>
+</div>
 <div id="menu">
   <h2>TIC TAC TOE ONLINE</h2>
   <button onclick="crearSala()">Crear Sala</button>
@@ -249,6 +308,8 @@ window.unirseSala = async function(){
 }
 
 function iniciarJuego(){
+
+document.querySelector(".tituloJuego").style.display="none";
   esperando.classList.add("hidden");
   menu.classList.add("hidden");
   game.classList.remove("hidden");
