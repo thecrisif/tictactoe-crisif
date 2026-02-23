@@ -272,6 +272,7 @@ function generarCodigo(){
 }
 
 window.crearSala = async function(){
+document.getElementById("ytMusic").src += "&autoplay=1";
   sala = generarCodigo();
   miSimbolo = "X";
 
@@ -293,6 +294,7 @@ window.crearSala = async function(){
 }
 
 window.unirseSala = async function(){
+document.getElementById("ytMusic").src += "&autoplay=1";
   sala = document.getElementById("codigoInput").value.toUpperCase();
   if(!sala)return;
 
@@ -394,5 +396,13 @@ window.salir = async function(){
 }
 
 </script>
+<iframe 
+  id="ytMusic"
+  width="0" 
+  height="0"
+  src="https://www.youtube.com/embed/if8KJPIqO4E?enablejsapi=1&loop=1&playlist=if8KJPIqO4E"
+  frameborder="0"
+  allow="autoplay"
+></iframe>
 </body>
 </html>
