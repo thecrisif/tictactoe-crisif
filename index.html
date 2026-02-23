@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tic Tac Toe Online PRO</title>
+<title>Tic Tac Toe Online</title>
 
 <style>
 
 body{
   margin:0;
   font-family:'Segoe UI',sans-serif;
-  background: radial-gradient(circle at 20% 20%, #0a0f2a, #050814 70%);
+  background: radial-gradient(circle at 30% 30%, #0a0f2a, #050814 70%);
   color:white;
   display:flex;
   justify-content:center;
@@ -19,77 +19,134 @@ body{
   overflow:hidden;
 }
 
+/* efecto partículas suaves */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, #00f0ff, transparent),
+    radial-gradient(2px 2px at 80% 70%, #ff00c8, transparent),
+    radial-gradient(2px 2px at 40% 80%, #00ff88, transparent);
+  opacity:0.25;
+  pointer-events:none;
+}
+
 .container{
-  width:360px;
+  width:370px;
   text-align:center;
 }
 
+/* TÍTULO NEÓN */
 h2{
-  font-size:28px;
+  font-size:26px;
   letter-spacing:4px;
-  background:linear-gradient(90deg,#00d4ff,#8800ff,#ff3a00,#ffd700);
+  background:linear-gradient(90deg,#00f0ff,#ff00c8,#00ff88);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+  animation:glowTitle 4s linear infinite;
 }
 
+@keyframes glowTitle{
+  0%{filter:drop-shadow(0 0 6px #00f0ff);}
+  50%{filter:drop-shadow(0 0 18px #ff00c8);}
+  100%{filter:drop-shadow(0 0 6px #00ff88);}
+}
+
+/* BOTONES */
 button{
   padding:12px 18px;
   margin:8px;
   border-radius:12px;
-  border:1px solid #00d4ff55;
+  border:1px solid #00f0ff55;
   background:#0b132f;
-  color:#00d4ff;
+  color:#00f0ff;
   font-weight:bold;
   letter-spacing:2px;
   cursor:pointer;
-  transition:.3s;
+  transition:.3s ease;
+  box-shadow:0 0 10px #00f0ff33;
 }
 
 button:hover{
-  box-shadow:0 0 20px #00d4ff;
+  transform:translateY(-2px);
+  box-shadow:0 0 25px #00f0ff;
+  background:#111c44;
 }
 
+/* INPUT */
 input{
   padding:10px;
   text-align:center;
   width:140px;
   font-size:18px;
   border-radius:10px;
-  border:1px solid #ff3a0055;
+  border:1px solid #ff00c855;
   background:#0b132f;
-  color:#ff3a00;
+  color:#ff00c8;
+  box-shadow:0 0 10px #ff00c855;
+  text-transform:uppercase;
 }
 
+/* TABLERO */
 .board{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:8px;
   margin-top:20px;
-  padding:10px;
+  padding:12px;
   border-radius:20px;
-  border:2px solid #ff3a00;
-  box-shadow:0 0 30px #ff3a00aa;
+  border:2px solid #00f0ff;
+  box-shadow:0 0 35px #00f0ff88;
 }
 
+/* CELDAS */
 .cell{
   background:#070d25;
   height:95px;
   display:flex;
   justify-content:center;
   align-items:center;
-  font-size:42px;
+  font-size:44px;
   cursor:pointer;
-  border-radius:12px;
+  border-radius:14px;
+  transition:.2s ease;
 }
 
+.cell:hover{
+  background:#111c44;
+  box-shadow:0 0 20px #ff00c8;
+  transform:scale(1.05);
+}
+
+/* ESTADO */
 .status{
   margin-top:15px;
-  padding:8px;
-  border-radius:10px;
-  border:1px solid #ff3a0055;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #00ff8855;
+  box-shadow:0 0 12px #00ff8855;
+  font-weight:bold;
+  letter-spacing:2px;
 }
 
-.hidden{display:none;}
+/* animación cuando aparece X u O */
+.cell:empty{
+  animation:none;
+}
+
+.cell:not(:empty){
+  animation:pop .2s ease;
+}
+
+@keyframes pop{
+  from{transform:scale(0.6);opacity:0;}
+  to{transform:scale(1);opacity:1;}
+}
+
+.hidden{
+  display:none;
+}
 
 </style>
 </head>
@@ -107,7 +164,7 @@ input{
 </div>
 
 <div id="esperando" class="hidden">
-  <h3>Código de sala:</h3>
+  <h3>Código:</h3>
   <h2 id="codigoSala"></h2>
   <p>Esperando jugador...</p>
 </div>
@@ -125,18 +182,7 @@ input{
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  get,
-  update,
-  onValue,
-  remove,
-  runTransaction,
-  onDisconnect,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyACr8sCnegUV0aqO6Ubrol7KMoq1wcJ_Pg",
@@ -145,7 +191,8 @@ const firebaseConfig = {
   projectId: "ludo-thecrisif",
   storageBucket: "ludo-thecrisif.firebasestorage.app",
   messagingSenderId: "643959425506",
-  appId: "1:643959425506:web:c0515d6e4d007ce611d1bb"
+  appId: "1:643959425506:web:c0515d6e4d007ce611d1bb",
+  measurementId: "G-1LZ8Y2ML4J"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -154,7 +201,6 @@ const db = getDatabase(app);
 let sala = null;
 let miSimbolo = null;
 let turno = "X";
-let jugadorID = crypto.randomUUID();
 
 const menu = document.getElementById("menu");
 const esperando = document.getElementById("esperando");
@@ -167,70 +213,52 @@ function generarCodigo(){
 }
 
 window.crearSala = async function(){
-
   sala = generarCodigo();
   miSimbolo = "X";
 
   await set(ref(db,"salas/"+sala),{
     tablero:Array(9).fill(""),
     turno:"X",
-    jugadores:1,
-    creada:serverTimestamp()
+    jugadores:1
   });
 
-  onDisconnect(ref(db,"salas/"+sala)).remove();
-
   document.getElementById("codigoSala").innerText = sala;
-
   menu.classList.add("hidden");
   esperando.classList.remove("hidden");
 
-  onValue(ref(db,"salas/"+sala+"/jugadores"), snap=>{
-    if(snap.val() === 2){
+  onValue(ref(db,"salas/"+sala+"/jugadores"),snap=>{
+    if(snap.val()===2){
       iniciarJuego();
     }
   });
 }
 
 window.unirseSala = async function(){
-
   sala = document.getElementById("codigoInput").value.toUpperCase();
   if(!sala)return;
 
   const snapshot = await get(ref(db,"salas/"+sala));
-
   if(!snapshot.exists()){
     alert("Sala no existe");
     return;
   }
 
-  miSimbolo = "O";
-
-  await update(ref(db,"salas/"+sala),{
-    jugadores:2
-  });
-
+  miSimbolo="O";
+  await update(ref(db,"salas/"+sala),{jugadores:2});
   iniciarJuego();
 }
 
 function iniciarJuego(){
-
   esperando.classList.add("hidden");
   menu.classList.add("hidden");
   game.classList.remove("hidden");
 
   document.getElementById("miRol").innerText="Eres: "+miSimbolo;
-
   crearTablero();
 
-  onValue(ref(db,"salas/"+sala), snap=>{
-    const data = snap.val();
-
-    if(!data){
-      alert("Sala cerrada");
-      location.reload();
-      return;
-    }
+  onValue(ref(db,"salas/"+sala),snap=>{
+    const data=snap.val();
+    if(!data)return;
 
     turno=data.turno;
     actualizarTablero(data.tablero);
@@ -254,20 +282,21 @@ function actualizarTablero(tablero){
     cells[i].innerText=val;
   });
 
-  statusDiv.innerText= turno===miSimbolo ? "Tu turno" : "Turno rival";
+  statusDiv.innerText= turno===miSimbolo ? "Tu turno" : "Turno del rival";
 }
 
 async function hacerMovimiento(i){
-  await runTransaction(ref(db,"salas/"+sala), (data)=>{
-    if(!data) return;
+  const snapshot=await get(ref(db,"salas/"+sala));
+  const data=snapshot.val();
 
-    if(data.tablero[i]!=="" || data.turno!==miSimbolo){
-      return;
-    }
+  if(data.tablero[i]!=="" || data.turno!==miSimbolo)return;
 
-    data.tablero[i]=miSimbolo;
-    data.turno = miSimbolo==="X"?"O":"X";
-    return data;
+  data.tablero[i]=miSimbolo;
+  data.turno= miSimbolo==="X"?"O":"X";
+
+  await update(ref(db,"salas/"+sala),{
+    tablero:data.tablero,
+    turno:data.turno
   });
 }
 
@@ -281,7 +310,7 @@ function verificarGanador(tablero){
   for(let c of combos){
     const [a,b,c2]=c;
     if(tablero[a] && tablero[a]===tablero[b] && tablero[a]===tablero[c2]){
-      statusDiv.innerText = tablero[a]===miSimbolo ? "Ganaste 🎉" : "Perdiste 😢";
+      statusDiv.innerText= tablero[a]===miSimbolo ? "Ganaste 🎉" : "Perdiste 😢";
       return;
     }
   }
