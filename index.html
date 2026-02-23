@@ -6,51 +6,127 @@
 <title>Tic Tac Toe Online PRO</title>
 
 <style>
+
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#0f172a;
+  font-family:'Segoe UI',sans-serif;
+  background: radial-gradient(circle at 20% 20%, #0a0f2a, #050814 70%);
   color:white;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
+  overflow:hidden;
 }
+
+/* Fondo partículas */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, #00d4ff, transparent),
+    radial-gradient(2px 2px at 70% 80%, #ff3a00, transparent),
+    radial-gradient(2px 2px at 40% 60%, #8800ff, transparent);
+  opacity:0.25;
+  pointer-events:none;
+}
+
 .container{
-  width:350px;
+  width:360px;
   text-align:center;
 }
-button{
-  padding:10px 15px;
-  margin:5px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
+
+/* TITULO NEON */
+h2{
+  font-size:28px;
+  letter-spacing:4px;
+  background:linear-gradient(90deg,#00d4ff,#8800ff,#ff3a00,#ffd700);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:glowText 4s linear infinite;
 }
+
+@keyframes glowText{
+  0%{filter:drop-shadow(0 0 5px #00d4ff);}
+  50%{filter:drop-shadow(0 0 15px #8800ff);}
+  100%{filter:drop-shadow(0 0 5px #ff3a00);}
+}
+
+/* BOTONES NEON */
+button{
+  padding:12px 18px;
+  margin:8px;
+  border-radius:12px;
+  border:1px solid #00d4ff55;
+  background:#0b132f;
+  color:#00d4ff;
+  font-weight:bold;
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:all .3s ease;
+  box-shadow:0 0 10px #00d4ff33;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 20px #00d4ff;
+  background:#111c44;
+}
+
+/* INPUT */
 input{
   padding:10px;
   text-align:center;
-  width:120px;
+  width:140px;
   font-size:18px;
-  text-transform:uppercase;
+  border-radius:10px;
+  border:1px solid #ff3a0055;
+  background:#0b132f;
+  color:#ff3a00;
+  box-shadow:0 0 10px #ff3a0033;
 }
+
+/* TABLERO */
 .board{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:5px;
+  gap:8px;
   margin-top:20px;
+  padding:10px;
+  border-radius:20px;
+  border:2px solid #ff3a00;
+  box-shadow:0 0 30px #ff3a00aa;
 }
+
 .cell{
-  background:#1e293b;
-  height:90px;
+  background:#070d25;
+  height:95px;
   display:flex;
   justify-content:center;
   align-items:center;
-  font-size:40px;
+  font-size:42px;
   cursor:pointer;
+  border-radius:12px;
+  transition:.2s;
 }
+
+.cell:hover{
+  background:#111c44;
+  box-shadow:0 0 15px #8800ff;
+}
+
+.status{
+  margin-top:15px;
+  padding:8px;
+  border-radius:10px;
+  border:1px solid #ff3a0055;
+  box-shadow:0 0 10px #ff3a0055;
+  letter-spacing:2px;
+}
+
 .hidden{display:none;}
-.status{margin-top:15px;font-weight:bold;}
+
 </style>
 </head>
 <body>
