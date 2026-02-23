@@ -19,41 +19,19 @@ body{
   overflow:hidden;
 }
 
-/* Fondo partículas */
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background-image:
-    radial-gradient(2px 2px at 20% 30%, #00d4ff, transparent),
-    radial-gradient(2px 2px at 70% 80%, #ff3a00, transparent),
-    radial-gradient(2px 2px at 40% 60%, #8800ff, transparent);
-  opacity:0.25;
-  pointer-events:none;
-}
-
 .container{
   width:360px;
   text-align:center;
 }
 
-/* TITULO NEON */
 h2{
   font-size:28px;
   letter-spacing:4px;
   background:linear-gradient(90deg,#00d4ff,#8800ff,#ff3a00,#ffd700);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
-  animation:glowText 4s linear infinite;
 }
 
-@keyframes glowText{
-  0%{filter:drop-shadow(0 0 5px #00d4ff);}
-  50%{filter:drop-shadow(0 0 15px #8800ff);}
-  100%{filter:drop-shadow(0 0 5px #ff3a00);}
-}
-
-/* BOTONES NEON */
 button{
   padding:12px 18px;
   margin:8px;
@@ -64,17 +42,13 @@ button{
   font-weight:bold;
   letter-spacing:2px;
   cursor:pointer;
-  transition:all .3s ease;
-  box-shadow:0 0 10px #00d4ff33;
+  transition:.3s;
 }
 
 button:hover{
-  transform:translateY(-2px);
   box-shadow:0 0 20px #00d4ff;
-  background:#111c44;
 }
 
-/* INPUT */
 input{
   padding:10px;
   text-align:center;
@@ -84,10 +58,8 @@ input{
   border:1px solid #ff3a0055;
   background:#0b132f;
   color:#ff3a00;
-  box-shadow:0 0 10px #ff3a0033;
 }
 
-/* TABLERO */
 .board{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -108,12 +80,6 @@ input{
   font-size:42px;
   cursor:pointer;
   border-radius:12px;
-  transition:.2s;
-}
-
-.cell:hover{
-  background:#111c44;
-  box-shadow:0 0 15px #8800ff;
 }
 
 .status{
@@ -121,8 +87,6 @@ input{
   padding:8px;
   border-radius:10px;
   border:1px solid #ff3a0055;
-  box-shadow:0 0 10px #ff3a0055;
-  letter-spacing:2px;
 }
 
 .hidden{display:none;}
@@ -143,7 +107,7 @@ input{
 </div>
 
 <div id="esperando" class="hidden">
-  <h3>Código:</h3>
+  <h3>Código de sala:</h3>
   <h2 id="codigoSala"></h2>
   <p>Esperando jugador...</p>
 </div>
@@ -203,30 +167,38 @@ function generarCodigo(){
 }
 
 window.crearSala = async function(){
+
   sala = generarCodigo();
   miSimbolo = "X";
 
   await set(ref(db,"salas/"+sala),{
     tablero:Array(9).fill(""),
     turno:"X",
-    jugadores:{ X: jugadorID },
-    creada: serverTimestamp()
+    jugadores:1,
+    creada:serverTimestamp()
   });
 
   onDisconnect(ref(db,"salas/"+sala)).remove();
 
   document.getElementById("codigoSala").innerText = sala;
+
   menu.classList.add("hidden");
   esperando.classList.remove("hidden");
 
-  escucharSala();
+  onValue(ref(db,"salas/"+sala+"/jugadores"), snap=>{
+    if(snap.val() === 2){
+      iniciarJuego();
+    }
+  });
 }
 
 window.unirseSala = async function(){
+
   sala = document.getElementById("codigoInput").value.toUpperCase();
   if(!sala)return;
 
   const snapshot = await get(ref(db,"salas/"+sala));
+
   if(!snapshot.exists()){
     alert("Sala no existe");
     return;
@@ -234,22 +206,24 @@ window.unirseSala = async function(){
 
   miSimbolo = "O";
 
-  await update(ref(db,"salas/"+sala+"/jugadores"),{
-    O: jugadorID
+  await update(ref(db,"salas/"+sala),{
+    jugadores:2
   });
 
-  escucharSala();
+  iniciarJuego();
 }
 
-function escucharSala(){
+function iniciarJuego(){
+
   esperando.classList.add("hidden");
   menu.classList.add("hidden");
   game.classList.remove("hidden");
 
-  document.getElementById("miRol").innerText = "Eres: " + miSimbolo;
+  document.getElementById("miRol").innerText="Eres: "+miSimbolo;
+
   crearTablero();
 
-  onValue(ref(db,"salas/"+sala), snap => {
+  onValue(ref(db,"salas/"+sala), snap=>{
     const data = snap.val();
 
     if(!data){
@@ -258,7 +232,7 @@ function escucharSala(){
       return;
     }
 
-    turno = data.turno;
+    turno=data.turno;
     actualizarTablero(data.tablero);
     verificarGanador(data.tablero);
   });
@@ -280,7 +254,7 @@ function actualizarTablero(tablero){
     cells[i].innerText=val;
   });
 
-  statusDiv.innerText = turno===miSimbolo ? "Tu turno" : "Turno rival";
+  statusDiv.innerText= turno===miSimbolo ? "Tu turno" : "Turno rival";
 }
 
 async function hacerMovimiento(i){
