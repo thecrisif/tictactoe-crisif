@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tic Tac Toe Online</title>
+<title>Tic Tac Toe Online PRO</title>
 
 <style>
 body{
@@ -85,7 +85,18 @@ input{
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  get,
+  update,
+  onValue,
+  remove,
+  runTransaction,
+  onDisconnect,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyACr8sCnegUV0aqO6Ubrol7KMoq1wcJ_Pg",
@@ -94,8 +105,7 @@ const firebaseConfig = {
   projectId: "ludo-thecrisif",
   storageBucket: "ludo-thecrisif.firebasestorage.app",
   messagingSenderId: "643959425506",
-  appId: "1:643959425506:web:c0515d6e4d007ce611d1bb",
-  measurementId: "G-1LZ8Y2ML4J"
+  appId: "1:643959425506:web:c0515d6e4d007ce611d1bb"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -104,6 +114,7 @@ const db = getDatabase(app);
 let sala = null;
 let miSimbolo = null;
 let turno = "X";
+let jugadorID = crypto.randomUUID();
 
 const menu = document.getElementById("menu");
 const esperando = document.getElementById("esperando");
@@ -122,18 +133,17 @@ window.crearSala = async function(){
   await set(ref(db,"salas/"+sala),{
     tablero:Array(9).fill(""),
     turno:"X",
-    jugadores:1
+    jugadores:{ X: jugadorID },
+    creada: serverTimestamp()
   });
+
+  onDisconnect(ref(db,"salas/"+sala)).remove();
 
   document.getElementById("codigoSala").innerText = sala;
   menu.classList.add("hidden");
   esperando.classList.remove("hidden");
 
-  onValue(ref(db,"salas/"+sala+"/jugadores"),snap=>{
-    if(snap.val()===2){
-      iniciarJuego();
-    }
-  });
+  escucharSala();
 }
 
 window.unirseSala = async function(){
@@ -146,24 +156,33 @@ window.unirseSala = async function(){
     return;
   }
 
-  miSimbolo="O";
-  await update(ref(db,"salas/"+sala),{jugadores:2});
-  iniciarJuego();
+  miSimbolo = "O";
+
+  await update(ref(db,"salas/"+sala+"/jugadores"),{
+    O: jugadorID
+  });
+
+  escucharSala();
 }
 
-function iniciarJuego(){
+function escucharSala(){
   esperando.classList.add("hidden");
   menu.classList.add("hidden");
   game.classList.remove("hidden");
 
-  document.getElementById("miRol").innerText="Eres: "+miSimbolo;
+  document.getElementById("miRol").innerText = "Eres: " + miSimbolo;
   crearTablero();
 
-  onValue(ref(db,"salas/"+sala),snap=>{
-    const data=snap.val();
-    if(!data)return;
+  onValue(ref(db,"salas/"+sala), snap => {
+    const data = snap.val();
 
-    turno=data.turno;
+    if(!data){
+      alert("Sala cerrada");
+      location.reload();
+      return;
+    }
+
+    turno = data.turno;
     actualizarTablero(data.tablero);
     verificarGanador(data.tablero);
   });
@@ -185,21 +204,20 @@ function actualizarTablero(tablero){
     cells[i].innerText=val;
   });
 
-  statusDiv.innerText= turno===miSimbolo ? "Tu turno" : "Turno del rival";
+  statusDiv.innerText = turno===miSimbolo ? "Tu turno" : "Turno rival";
 }
 
 async function hacerMovimiento(i){
-  const snapshot=await get(ref(db,"salas/"+sala));
-  const data=snapshot.val();
+  await runTransaction(ref(db,"salas/"+sala), (data)=>{
+    if(!data) return;
 
-  if(data.tablero[i]!=="" || data.turno!==miSimbolo)return;
+    if(data.tablero[i]!=="" || data.turno!==miSimbolo){
+      return;
+    }
 
-  data.tablero[i]=miSimbolo;
-  data.turno= miSimbolo==="X"?"O":"X";
-
-  await update(ref(db,"salas/"+sala),{
-    tablero:data.tablero,
-    turno:data.turno
+    data.tablero[i]=miSimbolo;
+    data.turno = miSimbolo==="X"?"O":"X";
+    return data;
   });
 }
 
@@ -213,7 +231,7 @@ function verificarGanador(tablero){
   for(let c of combos){
     const [a,b,c2]=c;
     if(tablero[a] && tablero[a]===tablero[b] && tablero[a]===tablero[c2]){
-      statusDiv.innerText= tablero[a]===miSimbolo ? "Ganaste 🎉" : "Perdiste 😢";
+      statusDiv.innerText = tablero[a]===miSimbolo ? "Ganaste 🎉" : "Perdiste 😢";
       return;
     }
   }
