@@ -3,260 +3,343 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tic Tac Toe Online</title>
-
+<title>Tic Tac Toe Online — THE CRIS IF</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
+:root{
+  --cyan:#00f0ff;--pink:#ff00c8;--green:#00ff88;
+  --purple:#a855f7;--gold:#ffd700;--orange:#ff6b35;
+  --bg:#03050e;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
 
 body{
-  margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background: radial-gradient(circle at 30% 30%, #0a0f2a, #050814 70%);
+  font-family:'Exo 2',sans-serif;
+  background:radial-gradient(ellipse at 20% 20%,rgba(0,100,200,0.15),transparent 60%),
+             radial-gradient(ellipse at 80% 80%,rgba(120,0,220,0.15),transparent 60%),
+             var(--bg);
   color:white;
-  display:flex;
-  justify-content:center;
-  align-items:flex-start; /* CAMBIO AQUÍ */
-  min-height:100vh;
-  padding-top:40px; /* espacio arriba */
+  display:flex;justify-content:center;align-items:flex-start;
+  min-height:100vh;padding:30px 16px 40px;overflow-x:hidden;
 }
-
-/* efecto partículas suaves */
 body::before{
-  content:"";
-  position:fixed;
-  inset:0;
+  content:"";position:fixed;inset:0;
   background-image:
-    radial-gradient(2px 2px at 20% 30%, #00f0ff, transparent),
-    radial-gradient(2px 2px at 80% 70%, #ff00c8, transparent),
-    radial-gradient(2px 2px at 40% 80%, #00ff88, transparent);
-  opacity:0.25;
-  pointer-events:none;
+    linear-gradient(rgba(0,240,255,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,240,255,0.03) 1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;z-index:0;
+}
+body::after{
+  content:"";position:fixed;inset:0;
+  background-image:
+    radial-gradient(2px 2px at 15% 25%,var(--cyan),transparent),
+    radial-gradient(2px 2px at 75% 65%,var(--pink),transparent),
+    radial-gradient(2px 2px at 45% 85%,var(--green),transparent),
+    radial-gradient(1px 1px at 90% 15%,var(--purple),transparent),
+    radial-gradient(1px 1px at 30% 60%,var(--gold),transparent);
+  opacity:0.3;pointer-events:none;z-index:0;
 }
 
-.container{
-  width:370px;
-  text-align:center;
+.container{width:100%;max-width:380px;text-align:center;position:relative;z-index:1;}
+
+/* TÍTULO */
+.tituloJuego{margin-bottom:28px;}
+.tituloJuego h1{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(2rem,11vw,3.2rem);font-weight:900;letter-spacing:6px;
+  margin:0 0 8px 0;
+  background:linear-gradient(90deg,#00f0ff,#a855f7,#ff00c8,#ff6b35,#ffd700,#00ff88,#00f0ff);
+  background-size:300%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:rainbowFlow 4s linear infinite;
+  filter:drop-shadow(0 0 25px rgba(0,240,255,0.4));
+}
+@keyframes rainbowFlow{0%{background-position:0%}100%{background-position:300%}}
+
+.tituloJuego .autor{
+  font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:5px;
+  color:rgba(255,215,0,0.8);padding:5px 18px;display:inline-block;border-radius:20px;
+  background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.25);
+  text-shadow:0 0 12px rgba(255,215,0,0.5);
 }
 
-/* TÍTULO NEÓN */
-h2{
-  font-size:26px;
-  letter-spacing:4px;
-  background:linear-gradient(90deg,#00f0ff,#ff00c8,#00ff88);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  animation:glowTitle 4s linear infinite;
+/* PANEL */
+.panel{
+  background:linear-gradient(145deg,rgba(5,10,30,0.97),rgba(8,14,42,0.97));
+  border-radius:24px;padding:28px 22px;
+  border:1px solid rgba(255,255,255,0.06);
+  box-shadow:0 0 60px rgba(0,240,255,0.05),0 20px 60px rgba(0,0,0,0.5);
+  position:relative;overflow:hidden;
+}
+.panel::before{
+  content:'';position:absolute;top:-1px;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,240,255,0.5),rgba(168,85,247,0.5),transparent);
+}
+.panel-title{
+  font-family:'Orbitron',monospace;font-size:clamp(0.62rem,3vw,0.82rem);
+  letter-spacing:5px;margin:0 0 22px 0;
+  background:linear-gradient(90deg,var(--cyan),var(--purple),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
 
-@keyframes glowTitle{
-  0%{filter:drop-shadow(0 0 6px #00f0ff);}
-  50%{filter:drop-shadow(0 0 18px #ff00c8);}
-  100%{filter:drop-shadow(0 0 6px #00ff88);}
+/* BOTONES MENÚ */
+.btn-crear,.btn-unirse{
+  display:block;width:100%;padding:16px;border-radius:14px;
+  font-family:'Orbitron',monospace;font-size:0.76rem;font-weight:700;letter-spacing:3px;
+  cursor:pointer;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.btn-crear{
+  border:1px solid rgba(0,240,255,0.4);
+  background:linear-gradient(135deg,rgba(0,240,255,0.1),rgba(0,240,255,0.02));
+  color:var(--cyan);box-shadow:0 0 20px rgba(0,240,255,0.1);margin-bottom:14px;
+}
+.btn-crear:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 0 40px rgba(0,240,255,0.5);background:rgba(0,240,255,0.14);}
+.btn-unirse{
+  border:1px solid rgba(168,85,247,0.45);
+  background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(168,85,247,0.02));
+  color:#c084fc;box-shadow:0 0 20px rgba(168,85,247,0.1);
+}
+.btn-unirse:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 0 40px rgba(168,85,247,0.5);background:rgba(168,85,247,0.14);}
+
+.sep{
+  display:flex;align-items:center;gap:10px;
+  color:rgba(255,255,255,0.15);font-size:0.6rem;letter-spacing:3px;
+  margin:4px 0 14px;font-family:'Orbitron',monospace;
+}
+.sep::before,.sep::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);}
+
+/* INPUTS */
+.input-group{margin-bottom:14px;text-align:left;}
+.input-group label{
+  font-family:'Orbitron',monospace;font-size:0.5rem;letter-spacing:3px;
+  color:rgba(168,85,247,0.7);display:block;margin-bottom:7px;
+}
+.input-group input{
+  width:100%;padding:13px 16px;border-radius:12px;
+  border:1px solid rgba(168,85,247,0.3);background:rgba(0,0,0,0.45);
+  color:#e2b8ff;font-family:'Exo 2',sans-serif;font-size:1rem;font-weight:600;
+  letter-spacing:2px;outline:none;transition:all 0.3s;box-sizing:border-box;
+}
+.input-group input:focus{border-color:rgba(168,85,247,0.7);box-shadow:0 0 24px rgba(168,85,247,0.25);}
+.input-group input.codigo{
+  font-family:'Orbitron',monospace;font-size:1.4rem;letter-spacing:10px;
+  text-align:center;color:#c084fc;text-transform:uppercase;
+}
+.input-group input.codigo::placeholder{letter-spacing:6px;font-size:1rem;color:rgba(192,132,252,0.3);}
+
+/* BOTÓN PRINCIPAL */
+.btn-go{
+  display:block;width:100%;padding:16px;border-radius:14px;border:none;
+  background:linear-gradient(90deg,#00f0ff,#a855f7,#ff00c8,#00f0ff);
+  background-size:250%;color:white;
+  font-family:'Orbitron',monospace;font-size:0.8rem;font-weight:900;letter-spacing:3px;
+  cursor:pointer;transition:all 0.3s;animation:rainbowFlow 3s linear infinite;
+  box-shadow:0 0 30px rgba(0,240,255,0.25);
+}
+.btn-go:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 0 50px rgba(0,240,255,0.5);}
+
+.btn-go.naranja{
+  background:linear-gradient(90deg,#a855f7,#ff00c8,#ff6b35,#a855f7);
+  background-size:250%;animation:rainbowFlow 3s linear infinite;
 }
 
-/* BOTONES */
-button{
-  padding:12px 18px;
-  margin:8px;
-  border-radius:12px;
-  border:1px solid #00f0ff55;
-  background:#0b132f;
-  color:#00f0ff;
-  font-weight:bold;
-  letter-spacing:2px;
-  cursor:pointer;
-  transition:.3s ease;
-  box-shadow:0 0 10px #00f0ff33;
+.btn-back{
+  background:transparent;border:none;color:rgba(255,255,255,0.3);
+  font-family:'Orbitron',monospace;font-size:0.52rem;letter-spacing:2px;
+  cursor:pointer;padding:10px;margin-top:6px;transition:color 0.2s;display:inline-block;
 }
+.btn-back:hover{color:rgba(255,255,255,0.7);}
 
-button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 0 25px #00f0ff;
-  background:#111c44;
+/* ESPERANDO */
+.codigo-grande{
+  font-family:'Orbitron',monospace;font-size:3.2rem;font-weight:900;letter-spacing:10px;
+  color:var(--cyan);text-shadow:0 0 30px var(--cyan);margin:8px 0;
+  animation:pulseCodigo 2s ease-in-out infinite;
 }
+@keyframes pulseCodigo{0%,100%{filter:drop-shadow(0 0 15px var(--cyan));}50%{filter:drop-shadow(0 0 40px var(--cyan));}}
+.spinner-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin:16px 0;}
+.spinner{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,215,0,0.15);border-top-color:var(--gold);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.wait-text{font-family:'Orbitron',monospace;font-size:0.58rem;letter-spacing:4px;color:rgba(255,215,0,0.7);}
 
-/* INPUT */
-input{
-  padding:10px;
-  text-align:center;
-  width:140px;
-  font-size:18px;
-  border-radius:10px;
-  border:1px solid #ff00c855;
-  background:#0b132f;
-  color:#ff00c8;
-  box-shadow:0 0 10px #ff00c855;
-  text-transform:uppercase;
+/* JUEGO - PLAYERS BAR */
+.players-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.pcard{
+  flex:1;background:rgba(255,255,255,0.02);border-radius:14px;padding:10px 8px;
+  text-align:center;border:2px solid rgba(255,255,255,0.05);transition:all 0.3s;
 }
+.pcard.turno-x{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,240,255,0.3);background:rgba(0,240,255,0.05);}
+.pcard.turno-o{border-color:var(--orange);box-shadow:0 0 20px rgba(255,107,53,0.3);background:rgba(255,107,53,0.05);}
+.pcard-sym{font-size:1.8rem;line-height:1;}
+.pcard-sym.x{color:var(--cyan);filter:drop-shadow(0 0 8px var(--cyan));}
+.pcard-sym.o{color:var(--orange);filter:drop-shadow(0 0 8px var(--orange));}
+.pcard-name{font-family:'Orbitron',monospace;font-size:0.42rem;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcard-score{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:700;margin-top:2px;}
+.pcard-score.x{color:var(--cyan);}
+.pcard-score.o{color:var(--orange);}
+.vs{font-family:'Orbitron',monospace;font-size:0.75rem;font-weight:900;color:rgba(255,255,255,0.15);}
 
 /* TABLERO */
 .board{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-  margin-top:20px;
-  padding:12px;
-  border-radius:25px;
-  position:relative;
-  background:#070d25;
-  z-index:1;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  padding:12px;border-radius:24px;position:relative;background:#030810;
+  z-index:1;margin-bottom:14px;
 }
-
-/* MARCO ARCOIRIS ANIMADO */
 .board::before{
-  content:"";
-  position:absolute;
-  inset:-4px;
-  border-radius:30px;
-  background:linear-gradient(
-    45deg,
-    red,
-    orange,
-    yellow,
-    lime,
-    cyan,
-    blue,
-    violet,
-    red
-  );
-  background-size:400%;
-  animation:rainbowMove 6s linear infinite;
-  z-index:-1;
-  filter:blur(8px);
+  content:"";position:absolute;inset:-3px;border-radius:27px;
+  background:linear-gradient(45deg,#ff0000,#ff7700,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000);
+  background-size:400%;animation:rainbowMove 4s linear infinite;z-index:-1;filter:blur(7px);
 }
+@keyframes rainbowMove{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
 
-@keyframes rainbowMove{
-  0%{background-position:0% 50%;}
-  50%{background-position:100% 50%;}
-  100%{background-position:0% 50%;}
-}
-
-/* CELDAS */
 .cell{
-  background:#070d25;
-  height:95px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:44px;
-  cursor:pointer;
-  border-radius:14px;
-  transition:.2s ease;
+  background:#07091f;height:95px;display:flex;justify-content:center;align-items:center;
+  font-size:46px;font-weight:900;cursor:pointer;border-radius:14px;transition:.2s ease;
+  font-family:'Orbitron',monospace;border:1px solid rgba(255,255,255,0.04);
 }
+.cell:hover{background:#111830;box-shadow:0 0 22px rgba(168,85,247,0.5);transform:scale(1.04);}
+.cell.x-cell{color:var(--cyan);text-shadow:0 0 20px var(--cyan);}
+.cell.o-cell{color:var(--orange);text-shadow:0 0 20px var(--orange);}
+.cell:not(:empty){animation:pop .2s ease;}
+@keyframes pop{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
 
-.cell:hover{
-  background:#111c44;
-  box-shadow:0 0 20px #ff00c8;
-  transform:scale(1.05);
-}
-
-/* ESTADO */
+/* STATUS */
 .status{
-  margin-top:15px;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid #00ff8855;
-  box-shadow:0 0 12px #00ff8855;
-  font-weight:bold;
-  letter-spacing:2px;
+  padding:12px;border-radius:12px;
+  border:1px solid rgba(0,255,136,0.15);box-shadow:0 0 14px rgba(0,255,136,0.08);
+  font-family:'Orbitron',monospace;font-size:0.68rem;font-weight:700;letter-spacing:3px;
+  margin-bottom:12px;min-height:44px;display:flex;align-items:center;justify-content:center;
 }
 
-/* animación cuando aparece X u O */
-.cell:empty{
-  animation:none;
+/* BOTONES JUEGO */
+.game-btns{display:flex;gap:10px;}
+.btn-game{
+  flex:1;padding:12px;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);
+  color:rgba(255,255,255,0.45);font-family:'Orbitron',monospace;
+  font-size:0.52rem;letter-spacing:2px;cursor:pointer;transition:all 0.2s;
 }
+.btn-game:hover{background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.4);color:white;box-shadow:0 0 20px rgba(168,85,247,0.3);transform:translateY(-2px);}
 
-.cell:not(:empty){
-  animation:pop .2s ease;
-}
-
-@keyframes pop{
-  from{transform:scale(0.6);opacity:0;}
-  to{transform:scale(1);opacity:1;}
-}
-
-.hidden{
-  display:none;
-}
+.firma{font-family:'Orbitron',monospace;font-size:0.44rem;letter-spacing:3px;padding:5px 14px;border-radius:20px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.22);color:rgba(255,215,0,0.65);display:inline-block;margin-top:12px;}
 
 /* LÍNEA GANADORA */
 .win-line{
-  position:absolute;
-  height:7px;
-  border-radius:6px;
-  background:linear-gradient(90deg,#00f0ff,#ff00c8,#00ff88);
-  box-shadow:0 0 18px #00f0ff, 0 0 40px #ff00c8;
-  z-index:10;
-  pointer-events:none;
-  transform-origin:left center;
-  animation:winLinePop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  position:absolute;height:7px;border-radius:6px;
+  background:linear-gradient(90deg,#00f0ff,#a855f7,#ff00c8,#ff6b35);
+  box-shadow:0 0 20px #00f0ff,0 0 50px rgba(168,85,247,0.5);
+  z-index:10;pointer-events:none;transform-origin:left center;
+  animation:winLinePop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
 }
-@keyframes winLinePop{
-  from{transform:scaleX(0) rotate(var(--angle,0deg));}
-  to{transform:scaleX(1) rotate(var(--angle,0deg));}
-}
-/* TITULO PRINCIPAL */
-.tituloJuego{
-  margin-bottom:30px;
-}
+@keyframes winLinePop{from{transform:scaleX(0) rotate(var(--angle,0deg));}to{transform:scaleX(1) rotate(var(--angle,0deg));}}
 
-.tituloJuego h1{
-  font-size:38px;
-  letter-spacing:6px;
-  margin:0;
-  font-weight:bold;
-  background:linear-gradient(
-    90deg,
-    red,
-    orange,
-    yellow,
-    lime,
-    cyan,
-    blue,
-    violet,
-    red
-  );
-  background-size:400%;
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  animation:rainbowText 6s linear infinite;
-  text-shadow:0 0 20px rgba(255,255,255,0.3);
-}
+/* SÍMBOLO GRANDE EN PANTALLA NOMBRES */
+.sym-grande{font-size:3rem;margin-bottom:8px;line-height:1;}
+.sym-grande.x{color:var(--cyan);filter:drop-shadow(0 0 15px var(--cyan));}
+.sym-grande.o{color:var(--orange);filter:drop-shadow(0 0 15px var(--orange));}
+.sub-texto{font-size:0.65rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:18px;font-family:'Orbitron',monospace;}
+
+.hidden{display:none;}
 </style>
 </head>
 <body>
-
 <div class="container">
-<div class="tituloJuego">
-  <h1>TIC TAC TOE</h1>
-  <h3 class="autor">THE CRIS IF</h3>
-</div>
-<div id="menu">
-  <h2>TIC TAC TOE ONLINE</h2>
-  <button onclick="crearSala()">Crear Sala</button>
-  <br>
-  <input id="codigoInput" maxlength="4" placeholder="XXXX">
-  <br>
-  <button onclick="unirseSala()">Unirse</button>
-</div>
 
-<div id="esperando" class="hidden">
-  <h3>Código:</h3>
-  <h2 id="codigoSala"></h2>
-  <p>Esperando jugador...</p>
-</div>
+  <!-- TÍTULO -->
+  <div class="tituloJuego" id="titulo">
+    <h1>TIC TAC TOE</h1>
+    <div class="autor">⚡ THE CRIS IF ⚡</div>
+  </div>
 
-<div id="game" class="hidden">
-  <h3 id="miRol"></h3>
-  <div class="board" id="board"></div>
-  <div class="status" id="status"></div>
-  <button onclick="reiniciar()">Revancha</button>
-  <button onclick="salir()">Salir</button>
-</div>
+  <!-- ══ MENÚ ══ -->
+  <div id="screen-menu">
+    <div class="panel">
+      <div class="panel-title">TIC TAC TOE ONLINE</div>
+      <button class="btn-crear" onclick="irACrear()">➕ &nbsp;CREAR SALA</button>
+      <div class="sep">O</div>
+      <div class="input-group">
+        <label>CÓDIGO DE TU AMIGO</label>
+        <input class="codigo" id="codigoInput" maxlength="4" placeholder="XXXX"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
+      </div>
+      <button class="btn-unirse" onclick="irAUnirse()">🔗 &nbsp;UNIRSE A SALA</button>
+    </div>
+  </div>
+
+  <!-- ══ NOMBRE (CREAR) ══ -->
+  <div id="screen-nombre-crear" class="hidden">
+    <div class="panel">
+      <div class="panel-title">CREAR SALA</div>
+      <div class="sym-grande x">✕</div>
+      <div class="sub-texto">SERÁS EL JUGADOR X</div>
+      <div class="input-group">
+        <label>¿CÓMO TE LLAMAS?</label>
+        <input id="nombreCreador" placeholder="Tu nombre..." maxlength="12">
+      </div>
+      <button class="btn-go" onclick="crearSalaConNombre()">CREAR SALA ➤</button>
+      <br><button class="btn-back" onclick="volverMenu()">◀ VOLVER</button>
+    </div>
+  </div>
+
+  <!-- ══ NOMBRE (UNIRSE) ══ -->
+  <div id="screen-nombre-unirse" class="hidden">
+    <div class="panel">
+      <div class="panel-title">UNIRSE A SALA</div>
+      <div class="sym-grande o">○</div>
+      <div class="sub-texto">SERÁS EL JUGADOR O</div>
+      <div class="input-group">
+        <label>¿CÓMO TE LLAMAS?</label>
+        <input id="nombreUnido" placeholder="Tu nombre..." maxlength="12">
+      </div>
+      <button class="btn-go naranja" onclick="unirseSalaConNombre()">UNIRSE ➤</button>
+      <br><button class="btn-back" onclick="volverMenu()">◀ VOLVER</button>
+    </div>
+  </div>
+
+  <!-- ══ ESPERANDO ══ -->
+  <div id="esperando" class="hidden">
+    <div class="panel">
+      <div class="panel-title">SALA CREADA</div>
+      <p style="font-size:0.58rem;letter-spacing:3px;color:rgba(255,255,255,0.3);margin-bottom:4px;font-family:'Orbitron',monospace">TU CÓDIGO ES</p>
+      <div class="codigo-grande" id="codigoSala">----</div>
+      <p style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-bottom:12px">Comparte este código con tu amigo</p>
+      <div class="spinner-wrap">
+        <div class="spinner"></div>
+        <div class="wait-text">ESPERANDO AMIGO...</div>
+      </div>
+      <button class="btn-back" onclick="volverMenu()">◀ CANCELAR</button>
+    </div>
+  </div>
+
+  <!-- ══ JUEGO ══ -->
+  <div id="game" class="hidden">
+    <div class="players-bar">
+      <div class="pcard" id="card-x">
+        <div class="pcard-sym x">✕</div>
+        <div class="pcard-name" id="nombre-x">JUGADOR X</div>
+        <div class="pcard-score x" id="score-x">0</div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="pcard" id="card-o">
+        <div class="pcard-sym o">○</div>
+        <div class="pcard-name" id="nombre-o">JUGADOR O</div>
+        <div class="pcard-score o" id="score-o">0</div>
+      </div>
+    </div>
+
+    <div class="board" id="board"></div>
+    <div class="status" id="status">Conectando...</div>
+
+    <div class="game-btns">
+      <button class="btn-game" onclick="reiniciar()">↺ &nbsp;REVANCHA</button>
+      <button class="btn-game" onclick="salir()">✕ &nbsp;SALIR</button>
+    </div>
+    <div class="firma">⚡ THE CRIS IF ⚡</div>
+  </div>
 
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
@@ -274,75 +357,117 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let sala = null;
-let miSimbolo = null;
-let turno = "X";
+let sala=null, miSimbolo=null, turno="X";
+let miNombre="", codigoGuardado="";
+let scoreX=0, scoreO=0;
+let juegoTerminado=false;
 
-const menu = document.getElementById("menu");
-const esperando = document.getElementById("esperando");
-const game = document.getElementById("game");
 const boardDiv = document.getElementById("board");
 const statusDiv = document.getElementById("status");
+
+const SCREENS = ["screen-menu","screen-nombre-crear","screen-nombre-unirse","esperando","game"];
+function show(id){ document.getElementById(id).classList.remove("hidden"); }
+function hide(id){ document.getElementById(id).classList.add("hidden"); }
+function showOnly(id){
+  SCREENS.forEach(s => hide(s));
+  show(id);
+}
+
+window.volverMenu = function(){
+  if(sala) remove(ref(db,"salas/"+sala));
+  sala=null; miSimbolo=null; scoreX=0; scoreO=0; juegoTerminado=false;
+  document.getElementById("titulo").style.display="";
+  showOnly("screen-menu");
+}
+
+window.irACrear = function(){
+  showOnly("screen-nombre-crear");
+  document.getElementById("nombreCreador").value="";
+  document.getElementById("nombreCreador").focus();
+}
+
+window.irAUnirse = function(){
+  codigoGuardado = document.getElementById("codigoInput").value.toUpperCase();
+  if(!codigoGuardado || codigoGuardado.length < 4){
+    alert("Primero ingresa el código de 4 letras de tu amigo");
+    return;
+  }
+  showOnly("screen-nombre-unirse");
+  document.getElementById("nombreUnido").value="";
+  document.getElementById("nombreUnido").focus();
+}
 
 function generarCodigo(){
   return Math.random().toString(36).substring(2,6).toUpperCase();
 }
 
-window.crearSala = async function(){
-document.getElementById("ytMusic").src += "&autoplay=1";
-  sala = generarCodigo();
+window.crearSalaConNombre = async function(){
+  miNombre = document.getElementById("nombreCreador").value.trim() || "JUGADOR X";
   miSimbolo = "X";
+  sala = generarCodigo();
 
   await set(ref(db,"salas/"+sala),{
-    tablero:Array(9).fill(""),
-    turno:"X",
-    jugadores:1
+    tablero: Array(9).fill(""),
+    turno: "X",
+    jugadores: 1,
+    nombreX: miNombre,
+    nombreO: "AMIGO",
+    scoreX: 0,
+    scoreO: 0
   });
 
   document.getElementById("codigoSala").innerText = sala;
-  menu.classList.add("hidden");
-  esperando.classList.remove("hidden");
+  showOnly("esperando");
 
-  onValue(ref(db,"salas/"+sala+"/jugadores"),snap=>{
-    if(snap.val()===2){
-      iniciarJuego();
-    }
+  onValue(ref(db,"salas/"+sala+"/jugadores"), snap=>{
+    if(snap.val()===2) iniciarJuego();
   });
 }
 
-window.unirseSala = async function(){
-document.getElementById("ytMusic").src += "&autoplay=1";
-  sala = document.getElementById("codigoInput").value.toUpperCase();
-  if(!sala)return;
+window.unirseSalaConNombre = async function(){
+  miNombre = document.getElementById("nombreUnido").value.trim() || "JUGADOR O";
+  sala = codigoGuardado;
+  miSimbolo = "O";
 
-  const snapshot = await get(ref(db,"salas/"+sala));
-  if(!snapshot.exists()){
-    alert("Sala no existe");
-    return;
-  }
+  const snap = await get(ref(db,"salas/"+sala));
+  if(!snap.exists()){ alert("Sala no existe"); volverMenu(); return; }
 
-  miSimbolo="O";
-  await update(ref(db,"salas/"+sala),{jugadores:2});
+  await update(ref(db,"salas/"+sala),{ jugadores:2, nombreO:miNombre });
   iniciarJuego();
 }
 
 function iniciarJuego(){
-
-document.querySelector(".tituloJuego").style.display="none";
-  esperando.classList.add("hidden");
-  menu.classList.add("hidden");
-  game.classList.remove("hidden");
-
-  document.getElementById("miRol").innerText="Eres: "+miSimbolo;
+  document.getElementById("titulo").style.display="none";
+  juegoTerminado = false;
+  scoreX=0; scoreO=0;
+  showOnly("game");
   crearTablero();
 
-  onValue(ref(db,"salas/"+sala),snap=>{
-    const data=snap.val();
-    if(!data)return;
+  onValue(ref(db,"salas/"+sala), snap=>{
+    const data = snap.val();
+    if(!data) return;
 
-    turno=data.turno;
+    turno = data.turno;
+
+    // Nombres
+    document.getElementById("nombre-x").textContent = (data.nombreX||"JUGADOR X").toUpperCase();
+    document.getElementById("nombre-o").textContent = (data.nombreO||"JUGADOR O").toUpperCase();
+
+    // Turno visual
+    document.getElementById("card-x").className = "pcard"+(turno==="X"?" turno-x":"");
+    document.getElementById("card-o").className = "pcard"+(turno==="O"?" turno-o":"");
+
+    // Scores
+    if(data.scoreX!==undefined){ scoreX=data.scoreX; document.getElementById("score-x").textContent=scoreX; }
+    if(data.scoreO!==undefined){ scoreO=data.scoreO; document.getElementById("score-o").textContent=scoreO; }
+
     actualizarTablero(data.tablero);
-    verificarGanador(data.tablero);
+
+    const winner = verificarGanador(data.tablero);
+    if(!winner && !data.tablero.includes("")) {
+      statusDiv.style.color="var(--gold)";
+      statusDiv.textContent="🤝 EMPATE";
+    }
   });
 }
 
@@ -358,109 +483,99 @@ function crearTablero(){
 
 function actualizarTablero(tablero){
   const cells=document.querySelectorAll(".cell");
+  let hayGanador = verificarGanador(tablero);
+
   tablero.forEach((val,i)=>{
-    cells[i].innerText=val;
+    cells[i].textContent=val;
+    cells[i].className = val==="X" ? "cell x-cell" : val==="O" ? "cell o-cell" : "cell";
   });
 
-  statusDiv.innerText= turno===miSimbolo ? "Tu turno" : "Turno del rival";
+  if(!hayGanador && tablero.includes("")){
+    if(turno===miSimbolo){
+      statusDiv.style.color = miSimbolo==="X" ? "var(--cyan)" : "var(--orange)";
+      statusDiv.textContent="⚡ TU TURNO";
+    } else {
+      statusDiv.style.color="rgba(255,255,255,0.35)";
+      statusDiv.textContent="TURNO DEL RIVAL...";
+    }
+  }
 }
 
 async function hacerMovimiento(i){
-  const snapshot=await get(ref(db,"salas/"+sala));
-  const data=snapshot.val();
-
-  if(data.tablero[i]!=="" || data.turno!==miSimbolo)return;
+  if(juegoTerminado) return;
+  const snap=await get(ref(db,"salas/"+sala));
+  const data=snap.val();
+  if(data.tablero[i]!=="" || data.turno!==miSimbolo) return;
 
   data.tablero[i]=miSimbolo;
-  data.turno= miSimbolo==="X"?"O":"X";
+  data.turno=miSimbolo==="X"?"O":"X";
 
-  await update(ref(db,"salas/"+sala),{
-    tablero:data.tablero,
-    turno:data.turno
-  });
+  const updates={tablero:data.tablero,turno:data.turno};
+
+  // Verificar si gana
+  const ganador=verificarGanador(data.tablero);
+  if(ganador){
+    juegoTerminado=true;
+    if(ganador==="X") updates.scoreX=(scoreX+1);
+    else updates.scoreO=(scoreO+1);
+  }
+
+  await update(ref(db,"salas/"+sala),updates);
 }
 
 function verificarGanador(tablero){
-  const combos=[
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
-  ];
-
+  const combos=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   for(let c of combos){
-    const [a,b,c2]=c;
+    const[a,b,c2]=c;
     if(tablero[a] && tablero[a]===tablero[b] && tablero[a]===tablero[c2]){
-      statusDiv.innerText= tablero[a]===miSimbolo ? "Ganaste 🎉" : "Perdiste 😢";
+      const gano=tablero[a]===miSimbolo;
+      statusDiv.style.color=gano?"var(--green)":"#ff4444";
+      statusDiv.textContent=gano?"🏆 ¡GANASTE!":"💀 PERDISTE";
+      juegoTerminado=true;
       dibujarLineaGanadora(c);
-      return;
+      return tablero[a];
     }
   }
-
-  if(!tablero.includes("")){
-    statusDiv.innerText="Empate 🤝";
-  }
+  return null;
 }
 
 function dibujarLineaGanadora(combo){
-  // Eliminar línea anterior si existe
-  const anterior = boardDiv.querySelector('.win-line');
+  const anterior=boardDiv.querySelector('.win-line');
   if(anterior) anterior.remove();
 
-  const cells = boardDiv.querySelectorAll('.cell');
-  const board = boardDiv.getBoundingClientRect();
-
-  const getRectCenter = (i) => {
-    const r = cells[i].getBoundingClientRect();
-    return {
-      x: r.left - board.left + r.width/2,
-      y: r.top - board.top + r.height/2
-    };
+  const cells=boardDiv.querySelectorAll('.cell');
+  const board=boardDiv.getBoundingClientRect();
+  const center=i=>{
+    const r=cells[i].getBoundingClientRect();
+    return{x:r.left-board.left+r.width/2,y:r.top-board.top+r.height/2};
   };
 
-  const A = getRectCenter(combo[0]);
-  const B = getRectCenter(combo[2]);
+  const A=center(combo[0]),B=center(combo[2]);
+  const dx=B.x-A.x,dy=B.y-A.y;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
 
-  const dx = B.x - A.x;
-  const dy = B.y - A.y;
-  const len = Math.sqrt(dx*dx + dy*dy);
-  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-  const line = document.createElement('div');
-  line.className = 'win-line';
-  line.style.cssText = `
-    left:${A.x}px;
-    top:${A.y - 3}px;
-    width:${len}px;
-    --angle:${angle}deg;
-    transform:rotate(${angle}deg);
-  `;
+  const line=document.createElement('div');
+  line.className='win-line';
+  line.style.cssText=`left:${A.x}px;top:${A.y-3.5}px;width:${len}px;--angle:${angle}deg;transform:rotate(${angle}deg);`;
   boardDiv.appendChild(line);
 }
 
 window.reiniciar = async function(){
-  // Limpiar línea ganadora
-  const linea = boardDiv.querySelector('.win-line');
+  juegoTerminado=false;
+  const linea=boardDiv.querySelector('.win-line');
   if(linea) linea.remove();
-
-  await update(ref(db,"salas/"+sala),{
-    tablero:Array(9).fill(""),
-    turno:"X"
-  });
+  await update(ref(db,"salas/"+sala),{tablero:Array(9).fill(""),turno:"X"});
 }
 
 window.salir = async function(){
   await remove(ref(db,"salas/"+sala));
   location.reload();
 }
-
 </script>
-<iframe 
-  id="ytMusic"
-  width="0" 
-  height="0"
+
+<iframe id="ytMusic" width="0" height="0"
   src="https://www.youtube.com/embed/if8KJPIqO4E?enablejsapi=1&loop=1&playlist=if8KJPIqO4E"
-  frameborder="0"
-  allow="autoplay"
-></iframe>
+  frameborder="0" allow="autoplay"></iframe>
 </body>
 </html>
