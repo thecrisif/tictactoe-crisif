@@ -177,6 +177,23 @@ input{
 .hidden{
   display:none;
 }
+
+/* LÍNEA GANADORA */
+.win-line{
+  position:absolute;
+  height:7px;
+  border-radius:6px;
+  background:linear-gradient(90deg,#00f0ff,#ff00c8,#00ff88);
+  box-shadow:0 0 18px #00f0ff, 0 0 40px #ff00c8;
+  z-index:10;
+  pointer-events:none;
+  transform-origin:left center;
+  animation:winLinePop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes winLinePop{
+  from{transform:scaleX(0) rotate(var(--angle,0deg));}
+  to{transform:scaleX(1) rotate(var(--angle,0deg));}
+}
 /* TITULO PRINCIPAL */
 .tituloJuego{
   margin-bottom:30px;
@@ -374,6 +391,7 @@ function verificarGanador(tablero){
     const [a,b,c2]=c;
     if(tablero[a] && tablero[a]===tablero[b] && tablero[a]===tablero[c2]){
       statusDiv.innerText= tablero[a]===miSimbolo ? "Ganaste 🎉" : "Perdiste 😢";
+      dibujarLineaGanadora(c);
       return;
     }
   }
@@ -383,7 +401,47 @@ function verificarGanador(tablero){
   }
 }
 
+function dibujarLineaGanadora(combo){
+  // Eliminar línea anterior si existe
+  const anterior = boardDiv.querySelector('.win-line');
+  if(anterior) anterior.remove();
+
+  const cells = boardDiv.querySelectorAll('.cell');
+  const board = boardDiv.getBoundingClientRect();
+
+  const getRectCenter = (i) => {
+    const r = cells[i].getBoundingClientRect();
+    return {
+      x: r.left - board.left + r.width/2,
+      y: r.top - board.top + r.height/2
+    };
+  };
+
+  const A = getRectCenter(combo[0]);
+  const B = getRectCenter(combo[2]);
+
+  const dx = B.x - A.x;
+  const dy = B.y - A.y;
+  const len = Math.sqrt(dx*dx + dy*dy);
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+  const line = document.createElement('div');
+  line.className = 'win-line';
+  line.style.cssText = `
+    left:${A.x}px;
+    top:${A.y - 3}px;
+    width:${len}px;
+    --angle:${angle}deg;
+    transform:rotate(${angle}deg);
+  `;
+  boardDiv.appendChild(line);
+}
+
 window.reiniciar = async function(){
+  // Limpiar línea ganadora
+  const linea = boardDiv.querySelector('.win-line');
+  if(linea) linea.remove();
+
   await update(ref(db,"salas/"+sala),{
     tablero:Array(9).fill(""),
     turno:"X"
